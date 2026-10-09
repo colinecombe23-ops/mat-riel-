@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inventaire Matériel & Missions</title>
+<meta name="description" content="Suivi des boîtes de mesure et de leurs accessoires par scan RFID — départs et retours de mission.">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inventaire">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%230f172a'/%3E%3Crect x='128' y='200' width='256' height='180' rx='24' fill='%2338bdf8'/%3E%3Cpath d='M128 260h256' stroke='%230f172a' stroke-width='16'/%3E%3Crect x='224' y='140' width='64' height='60' rx='12' fill='%2338bdf8'/%3E%3Ccircle cx='196' cy='310' r='16' fill='%230f172a'/%3E%3Ccircle cx='256' cy='310' r='16' fill='%230f172a'/%3E%3Ccircle cx='316' cy='310' r='16' fill='%230f172a'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f8fafc;color:#0f172a;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 44px}
+h1{font-size:21px;margin:0}
+h2{font-size:17px;margin:0}
+.sub{color:#64748b;font-size:13px;margin:4px 0 0}
+.head{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tab{border:1px solid #e2e8f0;background:#fff;color:#475569;padding:8px 14px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer}
+.tab.active{background:#1e293b;color:#fff;border-color:#1e293b}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 1px 2px rgba(15,23,42,.04);margin-bottom:14px}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px}
+.stat .ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+.stat .val{font-size:20px;font-weight:700;line-height:1.1}
+.stat .lbl{font-size:11px;color:#64748b}
+.badge{display:inline-flex;align-items:center;border-radius:999px;border:1px solid transparent;font-size:12px;padding:3px 10px;font-weight:600;white-space:nowrap}
+.b-dispo{background:#d1fae5;color:#065f46;border-color:#a7f3d0}
+.b-sorti{background:#fef3c7;color:#92400e;border-color:#fde68a}
+.b-verif{background:#ffe4e6;color:#9f1239;border-color:#fecdd3}
+.pill{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f1f5f9;border-radius:6px;padding:3px 8px;font-size:12px;color:#475569;white-space:nowrap}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.spacer{flex:1}
+.btn{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:10px;padding:9px 14px;font-size:14px;font-weight:500;cursor:pointer}
+.btn:hover{background:#f8fafc}
+.btn.primary{background:#0284c7;border-color:#0284c7;color:#fff}
+.btn.primary:hover{background:#0369a1}
+.btn.success{background:#059669;border-color:#059669;color:#fff}
+.btn.success:hover{background:#047857}
+.btn.small{padding:5px 10px;font-size:12px}
+.btn.rose{border-color:#fecdd3;background:#fff;color:#e11d48}
+.btn.rose:hover{background:#fff1f2}
+.btn.green{border-color:#6ee7b7;background:#ecfdf5;color:#047857}
+input,select,textarea{border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px;font-size:14px;font-family:inherit;background:#fff;color:#0f172a;width:100%}
+input[type=checkbox]{width:18px;height:18px;accent-color:#0284c7;padding:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #0ea5e9;border-color:#0ea5e9}
+label.fld{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0}
+.banner{display:flex;gap:10px;border:1px solid;border-radius:12px;padding:10px 12px;font-size:14px;margin:0 0 14px;align-items:flex-start}
+.banner.err{background:#fff1f2;border-color:#fecdd3;color:#9f1239}
+.banner.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+.banner.warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;color:#64748b;font-weight:600;padding:6px 8px 6px 0;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+td{padding:6px 8px 6px 0;border-bottom:1px solid #f1f5f9;vertical-align:top;color:#334155}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+.chip{border:1px solid #cbd5e1;background:#f8fafc;border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;font-family:ui-monospace,Menlo,monospace;color:#475569}
+.boxhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.boxhead .name{font-weight:700;font-size:16px}
+.meta{color:#64748b;font-size:13px}
+.checkrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f1f5f9}
+.checkrow:last-child{border-bottom:none}
+.tri{display:inline-flex;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;flex:none}
+.tri button{border:none;background:#fff;color:#475569;font-size:12px;padding:6px 12px;cursor:pointer}
+.tri button.on-ok{background:#059669;color:#fff}
+.tri button.on-manquant{background:#e11d48;color:#fff}
+.tri button.on-defectueux{background:#f97316;color:#fff}
+.notice{border-radius:12px;padding:10px 12px;font-size:14px;margin:0 16px 12px;border:1px solid}
+.notice.amber{background:#fffbeb;border-color:#fde68a;color:#92400e}
+.notice.rose{background:#fff1f2;border-color:#fecdd3;color:#9f1239}
+.resolve-form{margin-top:12px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px;text-align:left}
+.hist{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:10px}
+.hist .ic{width:36px;height:36px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-size:16px}
+footer{margin-top:26px;text-align:center;color:#94a3b8;font-size:12px}
+pre.csvbox{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;font-size:11px;overflow:auto;max-height:220px;margin:8px 0}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.toolbar .grow{flex:1;min-width:170px}
+.dl-group{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+.scanwrap{display:flex;gap:8px}
+.scanbox{position:relative;flex:1}
+.scanbox .ant{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8}
+.scanbox input{padding-left:34px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+"use strict";
+(function () {
+
+/* ================================================================
+   Données de base — extraites du fichier Excel « Accessoires.xlsx »
+   ================================================================ */
+
+const DEVICES_BASE = [
+  { nom: "XL3-116", reference: "SONO-116", serial: "XL3A1160921", marque: "01dB", modele: "Fusion", etat: "Bon", statut: "Disponible", agence: "Agence de Lyon", proprietaire: "C. Combe", commentaire: "", thematique: "Acoustique", rfid: "RF-116-XY23", prisPar: "", sortiLe: "", retourPrevu: "" },
+  { nom: "XL3-117", reference: "SONO-117", serial: "XL3A1170945", marque: "01dB", modele: "Fusion", etat: "Bon", statut: "Sorti", agence: "Agence de Lyon", proprietaire: "M. Dupont", commentaire: "", thematique: "Acoustique", rfid: "RF-117-KL45", prisPar: "M. Dupont", sortiLe: "2026-10-05", retourPrevu: "2026-10-12" },
+  { nom: "DUO-204", reference: "SONO-204", serial: "DUO2040771", marque: "01dB", modele: "DUO", etat: "Bon", statut: "À vérifier", agence: "Agence de Lyon", proprietaire: "A. Bernard", commentaire: "", thematique: "Acoustique", rfid: "RF-204-ZZ88", prisPar: "", sortiLe: "", retourPrevu: "" },
+  { nom: "XL3-118", reference: "SONO-118", serial: "XL3A1181023", marque: "01dB", modele: "Fusion", etat: "Bon", statut: "Disponible", agence: "Agence de Lyon", proprietaire: "C. Combe", commentaire: "", thematique: "Acoustique", rfid: "RF-118-QR12", prisPar: "", sortiLe: "", retourPrevu: "" },
+  { nom: "ACC-301", reference: "VIB-301", serial: "ACC3010455", marque: "PCB", modele: "356A16", etat: "Bon", statut: "Disponible", agence: "Agence de Lyon", proprietaire: "A. Bernard", commentaire: "Accéléromètre pour les mesures de vibrations", thematique: "Vibrations", rfid: "RF-301-VB77", prisPar: "", sortiLe: "", retourPrevu: "" },
+];
+
+const ACC_BOXES = {
+  "XL3-116": { thematique: "Acoustique", statut: "Disponible", items: [
+    ["Calibreur", "CAL-116", "CA-1216", "01dB", "CAL 200"],
+    ["Préamplificateur", "PRE-116", "PA-1217", "01dB", "PRE 01"],
+    ["Microphone", "MIC-116", "MK-1218", "01dB", "MK 250"],
+    ["Kit intempéries", "KIT-116", "", "01dB", "Kit WE"],
+    ["Cadenas", "CAD-116", "", "—", "—"],
+    ["Sangle", "STR-116", "", "—", "—"],
+    ["Système d'accroche", "ACC-116", "", "—", "—"],
+    ["Câble batterie", "CAB-116", "", "—", "—"],
+  ]},
+  "XL3-117": { thematique: "Acoustique", statut: "Sorti", items: [
+    ["Calibreur", "CAL-117", "CA-1219", "01dB", "CAL 200"],
+    ["Préamplificateur", "PRE-117", "PA-1220", "01dB", "PRE 01"],
+    ["Microphone", "MIC-117", "MK-1221", "01dB", "MK 250"],
+    ["Kit intempéries", "KIT-117", "", "01dB", "Kit WE"],
+    ["Cadenas", "CAD-117", "", "—", "—"],
+    ["Sangle", "STR-117", "", "—", "—"],
+    ["Système d'accroche", "ACC-117", "", "—", "—"],
+    ["Câble batterie", "CAB-117", "", "—", "—"],
+  ]},
+  "DUO-204": { thematique: "Acoustique", statut: "Disponible", items: [
+    ["Calibreur", "CAL-204", "CA-1304", "01dB", "CAL 200"],
+    ["Préamplificateur", "PRE-204", "PA-1305", "01dB", "PRE 01"],
+    ["Microphone", "MIC-204", "MK-1306", "01dB", "MK 250"],
+    ["Kit intempéries", "KIT-204", "", "01dB", "Kit WE"],
+    ["Cadenas", "CAD-204", "", "—", "—"],
+    ["Sangle", "STR-204", "", "—", "—"],
+    ["Système d'accroche", "ACC-204", "", "—", "—"],
+    ["Câble batterie", "CAB-204", "", "—", "—"],
+  ]},
+  "XL3-118": { thematique: "Acoustique", statut: "Disponible", items: [
+    ["Calibreur", "CAL-118", "CA-1319", "01dB", "CAL 200"],
+    ["Préamplificateur", "PRE-118", "PA-1320", "01dB", "PRE 01"],
+    ["Microphone", "MIC-118", "MK-1321", "01dB", "MK 250"],
+    ["Kit intempéries", "KIT-118", "", "01dB", "Kit WE"],
+    ["Cadenas", "CAD-118", "", "—", "—"],
+    ["Sangle", "STR-118", "", "—", "—"],
+    ["Système d'accroche", "ACC-118", "", "—", "—"],
+    ["Câble batterie", "CAB-118", "", "—", "—"],
+  ]},
+  "ACC-301": { thematique: "Vibrations", statut: "Disponible", items: [
+    ["Câble BNC", "CBL-301", "", "PCB", "Câble 10 m"],
+    ["Aimant de montage", "AIM-301", "", "PCB", "Aimant"],
+    ["Chargeur batterie", "CHG-301", "", "PCB", "CH-2"],
+  ]},
+};
+
+const ACC_OVERRIDES = {
+  "KIT-204": { statut: "À vérifier", commentaires: "[Retour 02/10/2026] Manquant : le pare-pluie du kit intempéries est absent de la boîte." },
+};
+
+const ACCESS_BASE = Object.keys(ACC_BOXES).flatMap(function (device) {
+  return ACC_BOXES[device].items.map(function (it) {
+    const ov = ACC_OVERRIDES[it[1]] || {};
+    return {
+      accessoire: it[0], device: device, reference: it[1], serial: it[2], marque: it[3], modele: it[4],
+      etat: "Bon", statut: ov.statut || ACC_BOXES[device].statut,
+      commentaires: ov.commentaires || "",
+      emplacement: "Boîte " + device, thematique: ACC_BOXES[device].thematique,
+    };
+  });
+});
+
+const OWNERS = ["C. Combe", "M. Dupont", "A. Bernard"];
+
+const HISTORY_BASE = [
+  { date: "2026-10-05T08:42:00.000Z", type: "depart", device: "XL3-117", rfid: "RF-117-KL45", user: "M. Dupont", details: "Départ en mission — retour prévu le 12/10/2026." },
+  { date: "2026-10-02T16:35:00.000Z", type: "retour", device: "DUO-204", rfid: "RF-204-ZZ88", user: "A. Bernard", details: "[Retour 02/10/2026] Manquant : le pare-pluie du kit intempéries est absent de la boîte. Boîte passée « À vérifier »." },
+];
+
+/* ==================== Utilitaires ==================== */
+
+const STORAGE_KEY = "inventaire-materiel-v1";
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const pad2 = (n) => String(n).padStart(2, "0");
+function todayISO() { const d = new Date(); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function nowISO() { return new Date().toISOString(); }
+function addDays(iso, n) { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function frDate(iso) { if (!iso) return "—"; const p = iso.split("-"); return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : iso; }
+function frDateTime(iso) { try { return new Date(iso).toLocaleString("fr-FR"); } catch (e) { return iso; } }
+let uidN = 0;
+function uid() { uidN += 1; return "evt-" + Date.now().toString(36) + "-" + uidN; }
+function esc(s) { return String(s === null || s === undefined ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+
+function loadState() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p && Array.isArray(p.devices) && Array.isArray(p.accessories)) {
+        return { devices: p.devices, accessories: p.accessories, history: Array.isArray(p.history) ? p.history : [] };
+      }
+    }
+  } catch (e) { /* stockage indisponible : on repart des données Excel */ }
+  return { devices: clone(DEVICES_BASE), accessories: clone(ACCESS_BASE), history: clone(HISTORY_BASE) };
+}
+function persist() { try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ } }
+
+let data = loadState();
+const ui = {
+  tab: "inventaire", search: "", statut: "Tous", them: "Toutes", expanded: {},
+  resolveFor: null, msg: {}, dep: null, depChecks: {}, ret: null, retStatuses: {},
+  input: {}, csvOut: null, confirmReset: false,
+};
+
+/* ==================== Logique métier ==================== */
+
+function handleDepart(deviceNom, rfid, prisPar, sortiLe, retourPrevu, nbAccs) {
+  data.devices = data.devices.map((d) => d.nom === deviceNom
+    ? { ...d, statut: "Sorti", prisPar: prisPar, sortiLe: sortiLe, retourPrevu: retourPrevu }
+    : d);
+  data.accessories = data.accessories.map((a) => a.device === deviceNom ? { ...a, statut: "Sorti" } : a);
+  data.history.unshift({
+    id: uid(), date: nowISO(), type: "depart", device: deviceNom, rfid: rfid, user: prisPar,
+    details: "Départ en mission — retour prévu le " + frDate(retourPrevu) + ". Contenu vérifié avant le départ (" + nbAccs + " accessoires cochés).",
+  });
+  persist();
+}
+
+function handleReturn(args) {
+  const dateFr = frDate(todayISO());
+  const box = data.accessories.filter((a) => a.device === args.deviceNom);
+  const manquants = box.filter((a) => (args.statuses[a.reference] || "ok") === "manquant");
+  const defectueux = box.filter((a) => (args.statuses[a.reference] || "ok") === "defectueux");
+  const parts = [];
+  if (manquants.length) parts.push("Manquant : " + manquants.map((a) => a.accessoire).join(", "));
+  if (defectueux.length) parts.push("Défectueux : " + defectueux.map((a) => a.accessoire).join(", "));
+  if (args.comment.trim()) parts.push("Remarque : " + args.comment.trim());
+  const hasProblem = parts.length > 0;
+  const problemText = "[Retour " + dateFr + "] " + parts.join(" — ");
+  data.devices = data.devices.map((d) => d.nom !== args.deviceNom ? d : {
+    ...d,
+    statut: hasProblem ? "À vérifier" : "Disponible",
+    prisPar: "", sortiLe: "", retourPrevu: "",
+    commentaire: hasProblem ? [d.commentaire, problemText].filter(Boolean).join(" ") : d.commentaire,
+  });
+  data.accessories = data.accessories.map((a) => {
+    if (a.device !== args.deviceNom) return a;
+    const st = args.statuses[a.reference] || "ok";
+    if (st === "manquant") return { ...a, statut: "À vérifier", commentaires: "[Retour " + dateFr + "] Manquant : accessoire absent de la boîte au retour." };
+    if (st === "defectueux") return { ...a, statut: "À vérifier", commentaires: "[Retour " + dateFr + "] Défectueux : à contrôler." };
+    return { ...a, statut: "Disponible" };
+  });
+  data.history.unshift({
+    id: uid(), date: nowISO(), type: "retour", device: args.deviceNom, rfid: args.rfid, user: args.user || "—",
+    details: hasProblem
+      ? problemText + " Boîte passée « À vérifier »."
+      : "Retour de mission — aucun problème signalé. Boîte remise « Disponible ».",
+  });
+  persist();
+  return hasProblem
+    ? { type: "warn", text: "Retour enregistré avec des problèmes : la boîte " + args.deviceNom + " passe « À vérifier ». " + parts.join(" ; ") + "." }
+    : { type: "ok", text: "Retour enregistré sans problème : " + args.deviceNom + " est de nouveau « Disponible »." };
+}
+
+function handleResolve(args) {
+  const dateFr = frDate(todayISO());
+  data.devices = data.devices.map((d) => d.nom === args.deviceNom ? { ...d, statut: "Disponible", commentaire: "" } : d);
+  data.accessories = data.accessories.map((a) => a.device === args.deviceNom ? { ...a, statut: "Disponible", commentaires: "" } : a);
+  data.history.unshift({
+    id: uid(), date: nowISO(), type: "controle", device: args.deviceNom, rfid: args.rfid, user: args.user || "—",
+    details: "[Contrôle " + dateFr + "] Problème réglé" + (args.note ? " : " + args.note : "") + ". Boîte et accessoires remis « Disponible ».",
+  });
+  persist();
+}
+
+/* ==================== Exports (CSV / Excel) ==================== */
+
+function downloadText(filename, content, mime, fallbackLabel) {
+  try {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 300);
+    ui.csvOut = null;
+  } catch (e) {
+    ui.csvOut = { label: fallbackLabel, content: content };
+  }
+}
+
+function deviceRows() {
+  const rows = [["Nom", "Référence", "Numéro de série", "Marque", "Modèle", "État", "Statut", "Agence", "Propriétaire", "Commentaire", "Thématique", "RFID", "Pris par", "Sorti le", "Retour prévu"]];
+  data.devices.forEach((d) => rows.push([d.nom, d.reference, d.serial, d.marque, d.modele, d.etat, d.statut, d.agence, d.proprietaire, d.commentaire, d.thematique, d.rfid, d.prisPar, frDate(d.sortiLe), frDate(d.retourPrevu)]));
+  return rows;
+}
+function accessoireRows() {
+  const rows = [["Accessoire", "Device associé", "Référence", "Numéro de série", "Marque", "Modèle", "État", "Statut", "Commentaires", "Dernier emplacement", "Thématique"]];
+  data.accessories.forEach((a) => rows.push([a.accessoire, a.device, a.reference, a.serial, a.marque, a.modele, a.etat, a.statut, a.commentaires, a.emplacement, a.thematique]));
+  return rows;
+}
+function historyRows() {
+  const rows = [["Date", "Type", "Boîte", "Puce RFID", "Personne", "Détails"]];
+  const TYPES = { depart: "Départ en mission", retour: "Retour de mission", controle: "Contrôle — problème réglé" };
+  [...data.history].sort((a, b) => (a.date < b.date ? 1 : -1)).forEach((h) => rows.push([frDateTime(h.date), TYPES[h.type] || h.type, h.device, h.rfid, h.user, h.details]));
+  return rows;
+}
+
+function exportCSV(filename, rows, fallbackLabel) {
+  const e = (v) => { const s = String(v === null || v === undefined ? "" : v); return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = "\uFEFF" + rows.map((r) => r.map(e).join(";")).join("\r\n");
+  downloadText(filename, csv, "text/csv;charset=utf-8", fallbackLabel);
+}
+function exportDevices() { exportCSV("Device.csv", deviceRows(), "Feuille Device"); }
+function exportAccessoires() { exportCSV("Accessoire.csv", accessoireRows(), "Feuille Accessoire"); }
+
+function exportWorkbook() {
+  const escXml = (v) => String(v === null || v === undefined ? "" : v)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  const sheetXml = (name, rows) => {
+    const xmlRows = rows.map((r, idx) => {
+      const cs = r.map((c) => {
+        const s = String(c === null || c === undefined ? "" : c);
+        const isNum = /^-?\d+([.,]\d+)?$/.test(s);
+        const style = idx === 0 ? ' ss:StyleID="hdr"' : "";
+        return "<Cell" + style + "><Data ss:Type=\"" + (isNum ? "Number" : "String") + "\">" + escXml(s) + "</Data></Cell>";
+      }).join("");
+      return "        <Row>" + cs + "</Row>";
+    });
+    return "      <Worksheet ss:Name=\"" + escXml(name) + "\">\n        <Table>\n" + xmlRows.join("\n") + "\n        </Table>\n      </Worksheet>";
+  };
+  const xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+    "<?mso-application progid=\"Excel.Sheet\"?>\n" +
+    "<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">\n" +
+    "  <Styles>\n    <Style ss:ID=\"hdr\">\n      <Font ss:Bold=\"1\"/>\n    </Style>\n  </Styles>\n" +
+    sheetXml("Device", deviceRows()) + "\n" +
+    sheetXml("Accessoire", accessoireRows()) + "\n" +
+    sheetXml("Historique", historyRows()) + "\n" +
+    "</Workbook>";
+  downloadText("Accessoires_mis_a_jour.xls", xml, "application/vnd.ms-excel", "Classeur Excel mis à jour (Device + Accessoire + Historique)");
+}
+
+/* ==================== Rendu ==================== */
+
+function badge(statut, small) {
+  const cls = statut === "Disponible" ? "b-dispo" : statut === "Sorti" ? "b-sorti" : "b-verif";
+  return `<span class="badge ${cls}"${small ? ' style="font-size:11px;padding:2px 8px"' : ""}>${esc(statut)}</span>`;
+}
+function banner(msg) {
+  if (!msg) return "";
+  const cls = msg.type === "ok" ? "ok" : msg.type === "warn" ? "warn" : "err";
+  return `<div class="banner ${cls}"><span>${msg.type === "ok" ? "✅" : "⚠️"}</span><span>${esc(msg.text)}</span></div>`;
+}
+function statCard(icon, label, val, bg) {
+  return `<div class="stat"><div class="ic" style="background:${bg}">${icon}</div><div><div class="val">${val}</div><div class="lbl">${esc(label)}</div></div></div>`;
+}
+function accTableHTML(accs, small) {
+  let s = `<div style="overflow-x:auto"><table><thead><tr><th>Accessoire</th><th>Réf.</th><th>N° série</th><th>Marque / Modèle</th>${!small ? "<th>Emplacement</th>" : ""}<th>Statut</th></tr></thead><tbody>`;
+  accs.forEach((a) => {
+    s += `<tr><td style="font-weight:600">${esc(a.accessoire)}</td><td class="mono">${esc(a.reference)}</td><td class="mono">${esc(a.serial || "—")}</td><td style="color:#64748b">${a.marque !== "—" ? esc(a.marque) + " " + esc(a.modele) : "—"}</td>${!small ? `<td style="color:#64748b">${esc(a.emplacement)}</td>` : ""}<td>${badge(a.statut, true)}</td></tr>`;
+    if (a.commentaires) s += `<tr><td colspan="${small ? 5 : 6}" style="color:#e11d48;font-size:12px;padding-top:0">${esc(a.commentaires)}</td></tr>`;
+  });
+  return s + "</tbody></table></div>";
+}
+function scannerHTML(kind) {
+  return `<div class="scanwrap"><div class="scanbox"><span class="ant">📡</span><input id="${kind}-scan" placeholder="Scannez la puce RFID de la boîte (ex. RF-116-XY23) ou saisissez son code" value="${esc(ui.input[kind + "-scan"] || "")}"></div><button class="btn primary" data-action="scan-${kind}">Scanner</button></div>` +
+    `<div class="chips"><span class="sub" style="font-size:12px">Puces détectées à proximité :</span>` +
+    data.devices.map((d) => `<button class="chip" data-action="scan-${kind}" data-rfid="${esc(d.rfid)}">${esc(d.rfid)}</button>`).join("") + "</div>";
+}
+
+function invListHTML() {
+  const today = todayISO();
+  const q = ui.search.trim().toLowerCase();
+  const filtered = data.devices.filter((d) => {
+    const matchQ = !q || d.nom.toLowerCase().includes(q) || d.rfid.toLowerCase().includes(q) ||
+      (d.proprietaire || "").toLowerCase().includes(q) || (d.modele || "").toLowerCase().includes(q) ||
+      (d.prisPar || "").toLowerCase().includes(q);
+    const matchS = ui.statut === "Tous" || d.statut === ui.statut;
+    const matchT = ui.them === "Toutes" || d.thematique === ui.them;
+    return matchQ && matchS && matchT;
+  });
+  if (filtered.length === 0) {
+    return `<div class="card" style="text-align:center;color:#64748b;border-style:dashed">Aucun matériel ne correspond à ces critères.</div>`;
+  }
+  return filtered.map((d) => {
+    const accs = data.accessories.filter((a) => a.device === d.nom);
+    const isOpen = !!ui.expanded[d.nom];
+    const late = d.statut === "Sorti" && d.retourPrevu && d.retourPrevu < today;
+    let s = `<div class="card" style="padding:0">`;
+    s += `<div class="row" style="padding:16px">`;
+    s += `<div style="width:40px;height:40px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none">${d.thematique === "Vibrations" ? "📳" : "🔊"}</div>`;
+    s += `<div><div style="font-weight:700">${esc(d.nom)}</div><div class="meta">${esc(d.marque)} ${esc(d.modele)} · ${esc(d.thematique)}</div></div>`;
+    s += `<span class="pill">${esc(d.rfid)}</span>${badge(d.statut)}${late ? '<span class="badge b-verif" style="font-size:11px;padding:2px 8px">En retard</span>' : ""}`;
+    s += `<span class="spacer"></span><span class="meta" style="font-size:12px">Propriétaire : ${esc(d.proprietaire)}</span>`;
+    s += `<button class="btn small" data-action="toggle" data-nom="${esc(d.nom)}">${isOpen ? "Masquer le contenu" : "Voir le contenu (" + accs.length + ")"}</button>`;
+    s += `</div>`;
+    if (d.statut === "Sorti") {
+      s += `<div class="notice amber">🚚 Sortie en mission : prise par <b>${esc(d.prisPar)}</b> le ${frDate(d.sortiLe)} — retour prévu le ${frDate(d.retourPrevu)}${late ? " ⚠️ retard" : ""}</div>`;
+    }
+    if (d.statut === "À vérifier") {
+      s += `<div class="notice rose">${d.commentaire ? "🔍 " + esc(d.commentaire) : "🔍 Cette boîte a été signalée avec un problème lors du dernier retour."}`;
+      s += ` <button class="btn small rose" data-action="resolve-open" data-nom="${esc(d.nom)}">✔ Régler le problème</button>`;
+      if (ui.resolveFor === d.nom) {
+        s += `<div class="resolve-form">`;
+        s += `<p style="margin:0 0 8px;font-size:12px;color:#64748b;font-weight:600">Confirmez que le problème a été contrôlé et réglé : la boîte et tous ses accessoires redeviendront « Disponible ».</p>`;
+        s += `<div class="grid3" style="margin:0">`;
+        s += `<input id="res-user" placeholder="Contrôlé par (facultatif)" value="${esc(ui.input["res-user"] || "")}">`;
+        s += `<input id="res-note" placeholder="Action réalisée (ex. : pare-pluie retrouvé et remis dans la boîte)" value="${esc(ui.input["res-note"] || "")}">`;
+        s += `</div><div class="row" style="margin-top:10px">`;
+        s += `<button class="btn small" data-action="resolve-cancel">Annuler</button>`;
+        s += `<button class="btn small success" data-action="resolve-validate" data-nom="${esc(d.nom)}">Problème réglé — remettre « Disponible »</button>`;
+        s += `</div></div>`;
+      }
+      s += `</div>`;
+    }
+    if (isOpen) {
+      s += `<div style="border-top:1px solid #f1f5f9;padding:12px 16px">${accTableHTML(accs, false)}</div>`;
+    }
+    return s + `</div>`;
+  }).join("");
+}
+
+function inventoryHTML() {
+  const counts = {
+    dispo: data.devices.filter((d) => d.statut === "Disponible").length,
+    sortis: data.devices.filter((d) => d.statut === "Sorti").length,
+    verifier: data.devices.filter((d) => d.statut === "À vérifier").length,
+  };
+  let s = `<div class="statgrid">`;
+  s += statCard("📦", "Boîtes / matériels", data.devices.length, "#e0f2fe");
+  s += statCard("✅", "Disponibles", counts.dispo, "#d1fae5");
+  s += statCard("🚚", "Sortis en mission", counts.sortis, "#fef3c7");
+  s += statCard("🔍", "À vérifier", counts.verifier, "#ffe4e6");
+  s += `</div>`;
+  s += banner(ui.msg.inventaire);
+  s += `<div class="card toolbar">`;
+  s += `<input id="inv-search" class="grow" placeholder="Rechercher (boîte, RFID, personne…)" value="${esc(ui.search)}">`;
+  s += `<select id="inv-statut" style="width:auto">${["Tous", "Disponible", "Sorti", "À vérifier"].map((v) => `<option${ui.statut === v ? " selected" : ""}>${v}</option>`).join("")}</select>`;
+  s += `<select id="inv-them" style="width:auto">${["Toutes", "Acoustique", "Vibrations"].map((v) => `<option${ui.them === v ? " selected" : ""}>${v}</option>`).join("")}</select>`;
+  s += `<div class="dl-group">`;
+  s += `<button class="btn small green" data-action="export-xls" title="Génère un classeur Excel mis à jour (feuilles Device, Accessoire et Historique)">📗 Excel mis à jour</button>`;
+  s += `<button class="btn small" data-action="export-dev" title="Exporte la feuille « Device » mise à jour">⬇️ CSV Boîtes</button>`;
+  s += `<button class="btn small" data-action="export-acc" title="Exporte la feuille « Accessoire » mise à jour">⬇️ CSV Accessoires</button>`;
+  s += `</div></div>`;
+  if (ui.csvOut) {
+    s += `<div class="card"><p style="margin:0 0 4px;font-weight:600;font-size:14px">Téléchargement indisponible — copiez le contenu ci-dessous (${esc(ui.csvOut.label)}) :</p><pre class="csvbox">${esc(ui.csvOut.content)}</pre><button class="btn small" data-action="csv-close">Fermer</button></div>`;
+  }
+  s += `<div id="inv-list">${invListHTML()}</div>`;
+  return s;
+}
+
+function departHTML() {
+  let s = `<div class="card"><h2>🚚 Départ en mission</h2><p class="sub" style="margin-bottom:14px">Scannez la puce RFID de la boîte, cochez le contenu vérifié, indiquez qui la prend et la date de retour prévue. Le matériel passera au statut « Sorti ».</p>${scannerHTML("dep")}</div>`;
+  s += banner(ui.msg.depart);
+  if (ui.dep) {
+    const d = data.devices.find((x) => x.nom === ui.dep);
+    const accs = data.accessories.filter((a) => a.device === d.nom);
+    s += `<div class="card">`;
+    s += `<div class="boxhead"><span class="name">Boîte ${esc(d.nom)}</span><span class="pill">${esc(d.rfid)}</span>${badge(d.statut)}<span class="meta">${esc(d.marque)} ${esc(d.modele)} · ${esc(d.thematique)} · ${esc(d.agence)}</span></div>`;
+    const nChecked = accs.filter((a) => ui.depChecks[a.reference]).length;
+    s += `<div class="row" style="justify-content:space-between;margin:14px 0 4px"><label class="fld" style="margin:0">À vérifier avant le départ — cochez la présence de chaque accessoire :</label><button class="btn small" data-action="dep-checkall" id="dep-count-btn">Tout cocher (${nChecked}/${accs.length})</button></div>`;
+    s += `<div id="dep-checklist" style="border:1px solid #e2e8f0;border-radius:12px;padding:0 14px;margin-bottom:6px">`;
+    accs.forEach((a) => {
+      s += `<label class="checkrow" style="cursor:pointer"><input type="checkbox" data-action="dep-check" data-ref="${esc(a.reference)}" ${ui.depChecks[a.reference] ? "checked" : ""}>`;
+      s += `<div><div style="font-weight:600;font-size:14px">${esc(a.accessoire)}</div><div class="mono meta" style="font-size:12px">${esc(a.reference)}${a.serial ? " · N° série " + esc(a.serial) : ""}</div></div>`;
+      if (a.statut === "À vérifier") s += `<span style="margin-left:auto;color:#e11d48;font-size:12px">⚠ ${esc(a.commentaires)}</span>`;
+      s += `</label>`;
+    });
+    s += `</div>`;
+    s += `<div class="grid3">`;
+    s += `<div><label class="fld" for="dep-pris">Pris par</label><input id="dep-pris" list="users-list" placeholder="Nom de la personne" value="${esc(ui.input["dep-pris"] || "")}"><datalist id="users-list">${OWNERS.map((o) => `<option value="${esc(o)}">`).join("")}</datalist></div>`;
+    s += `<div><label class="fld" for="dep-sorti">Sorti le</label><input type="date" id="dep-sorti" value="${esc(ui.input["dep-sorti"] || todayISO())}"></div>`;
+    s += `<div><label class="fld" for="dep-retour">Retour prévu</label><input type="date" id="dep-retour" min="${esc(ui.input["dep-sorti"] || todayISO())}" value="${esc(ui.input["dep-retour"] || addDays(todayISO(), 7))}"></div>`;
+    s += `</div>`;
+    s += `<div class="row" style="margin-top:12px"><button class="btn" data-action="dep-cancel">Annuler</button><button class="btn primary" data-action="dep-confirm">Confirmer le départ</button></div>`;
+    s += `</div>`;
+  }
+  return s;
+}
+
+function retourHTML() {
+  let s = `<div class="card"><h2>🏠 Retour de mission</h2><p class="sub" style="margin-bottom:14px">Scannez de nouveau la puce RFID, vérifiez le contenu de la boîte et signalez d'éventuels problèmes. La boîte passera « Disponible » ou « À vérifier ».</p>${scannerHTML("ret")}</div>`;
+  s += banner(ui.msg.retour);
+  if (ui.ret) {
+    const d = data.devices.find((x) => x.nom === ui.ret);
+    const accs = data.accessories.filter((a) => a.device === d.nom);
+    s += `<div class="card">`;
+    s += `<div class="boxhead"><span class="name">Boîte ${esc(d.nom)}</span><span class="pill">${esc(d.rfid)}</span>${badge(d.statut)}</div>`;
+    s += `<p class="meta" style="margin:8px 0 14px">Prise par <b style="color:#0f172a">${esc(d.prisPar)}</b> le ${frDate(d.sortiLe)} · retour prévu le ${frDate(d.retourPrevu)}</p>`;
+    s += `<label class="fld" style="margin-bottom:6px">Vérification du contenu — indiquez l'état de chaque accessoire :</label>`;
+    s += `<div id="ret-checklist" style="border:1px solid #e2e8f0;border-radius:12px;padding:0 14px;margin-bottom:14px">`;
+    accs.forEach((a) => {
+      const cur = ui.retStatuses[a.reference] || "ok";
+      s += `<div class="checkrow" style="cursor:default">`;
+      s += `<div><div style="font-weight:600;font-size:14px">${esc(a.accessoire)}</div><div class="mono meta" style="font-size:12px">${esc(a.reference)}${a.serial ? " · N° série " + esc(a.serial) : ""}</div></div>`;
+      s += `<span class="tri" style="margin-left:auto">`;
+      [["ok", "Présent"], ["manquant", "Manquant"], ["defectueux", "Défectueux"]].forEach((p) => {
+        s += `<button class="${cur === p[0] ? "on-" + p[0] : ""}" data-action="ret-state" data-ref="${esc(a.reference)}" data-val="${p[0]}">${p[1]}</button>`;
+      });
+      s += `</span></div>`;
+    });
+    s += `</div>`;
+    s += `<label class="fld" for="ret-comment">Remarques / problèmes rencontrés pendant la manipulation (facultatif)</label>`;
+    s += `<textarea id="ret-comment" rows="3" placeholder="Ex. : le micro grésille par temps humide, le câble batterie a été endommagé…">${esc(ui.input["ret-comment"] || "")}</textarea>`;
+    const hasProblem = accs.some((a) => (ui.retStatuses[a.reference] || "ok") !== "ok") || (ui.input["ret-comment"] || "").trim().length > 0;
+    if (hasProblem) s += `<div class="banner warn"><span>⚠️</span><span>Des problèmes ont été signalés : la boîte passera au statut « À vérifier » après validation du retour.</span></div>`;
+    s += `<div class="row" style="margin-top:12px"><button class="btn" data-action="ret-cancel">Annuler</button><button class="btn success" data-action="ret-confirm">Valider le retour</button></div>`;
+    s += `</div>`;
+  }
+  return s;
+}
+
+function historyHTML() {
+  const TYPES = { depart: "Départ en mission", retour: "Retour de mission", controle: "Contrôle — problème réglé" };
+  const ICONS = { depart: "🚚", retour: "🏠", controle: "🔧" };
+  const BGS = { depart: "#fef3c7", retour: "#d1fae5", controle: "#e0f2fe" };
+  const sorted = [...data.history].sort((a, b) => (a.date < b.date ? 1 : -1));
+  let s = `<div class="card"><h2>🕓 Historique des mouvements</h2><p class="sub">Tous les départs et retours enregistrés, du plus récent au plus ancien.</p></div>`;
+  if (sorted.length === 0) s += `<div class="card" style="text-align:center;color:#64748b;border-style:dashed">Aucun mouvement enregistré pour le moment.</div>`;
+  sorted.forEach((h) => {
+    s += `<div class="hist"><div class="ic" style="background:${BGS[h.type] || "#f1f5f9"}">${ICONS[h.type] || "🕓"}</div><div><div style="font-weight:600;font-size:14px">${esc(h.device)} — ${esc(TYPES[h.type] || h.type)}</div><div class="meta" style="font-size:12px">${frDateTime(h.date)} · ${esc(h.user)} · puce ${esc(h.rfid)}</div><div style="font-size:12px;color:#475569;margin-top:4px">${esc(h.details)}</div></div></div>`;
+  });
+  return s;
+}
+
+function renderApp() {
+  const tabs = [["inventaire", "📦 Inventaire"], ["depart", "🚚 Départ en mission"], ["retour", "🏠 Retour de mission"], ["historique", "🕓 Historique"]];
+  let s = `<div class="wrap">`;
+  s += `<div class="head"><div><h1>📦 Inventaire Matériel & Missions</h1><p class="sub">Suivi des boîtes de mesure (sonomètres, accéléromètres) et de leurs accessoires par scan RFID — Agence de Lyon.</p></div>`;
+  s += `<button class="btn small${ui.confirmReset ? " rose" : ""}" data-action="reset">${ui.confirmReset ? "Confirmer : revenir aux données Excel d'origine ?" : "↺ Réinitialiser (données Excel)"}</button></div>`;
+  s += `<div class="tabs">${tabs.map((t) => `<button class="tab${ui.tab === t[0] ? " active" : ""}" data-action="tab" data-tab="${t[0]}">${t[1]}</button>`).join("")}</div>`;
+  s += `<div id="tabcontent">${ui.tab === "inventaire" ? inventoryHTML() : ui.tab === "depart" ? departHTML() : ui.tab === "retour" ? retourHTML() : historyHTML()}</div>`;
+  s += `<footer>Les modifications sont enregistrées sur cet appareil. Pour mettre à jour le fichier Excel : bouton « 📗 Excel mis à jour » (onglet Inventaire), ouvrez le fichier téléchargé dans Excel, puis Enregistrer sous → .xlsx pour remplacer l'ancien classeur.</footer>`;
+  s += `</div>`;
+  document.getElementById("root").innerHTML = s;
+}
+
+/* ==================== Actions ==================== */
+
+function refreshList() { const el = document.getElementById("inv-list"); if (el) el.innerHTML = invListHTML(); }
+
+function doScanDepart(code) {
+  const c = String(code || "").trim();
+  ui.input["dep-scan"] = "";
+  if (!c) return;
+  const d = data.devices.find((x) => x.rfid.toLowerCase() === c.toLowerCase() || x.nom.toLowerCase() === c.toLowerCase());
+  if (!d) { ui.dep = null; ui.msg.depart = { type: "error", text: "Puce RFID inconnue : « " + c + " ». Aucune boîte ne correspond." }; renderApp(); return; }
+  if (d.statut === "Sorti") { ui.dep = null; ui.msg.depart = { type: "error", text: d.nom + " est déjà sorti (pris par " + d.prisPar + ", retour prévu le " + frDate(d.retourPrevu) + ")." }; renderApp(); return; }
+  if (d.statut === "À vérifier") { ui.dep = null; ui.msg.depart = { type: "error", text: d.nom + " est marquée « À vérifier » : la boîte doit être contrôlée avant tout nouveau départ. Réglez le problème depuis l'onglet Inventaire (bouton « Régler le problème »), puis re-scannez." }; renderApp(); return; }
+  ui.dep = d.nom;
+  ui.msg.depart = null;
+  ui.depChecks = {};
+  data.accessories.filter((a) => a.device === d.nom).forEach((a) => { ui.depChecks[a.reference] = false; });
+  ui.input = {};
+  ui.input["dep-pris"] = d.proprietaire || "";
+  ui.input["dep-sorti"] = todayISO();
+  ui.input["dep-retour"] = addDays(todayISO(), 7);
+  renderApp();
+}
+
+function doScanRetour(code) {
+  const c = String(code || "").trim();
+  ui.input["ret-scan"] = "";
+  if (!c) return;
+  const d = data.devices.find((x) => x.rfid.toLowerCase() === c.toLowerCase() || x.nom.toLowerCase() === c.toLowerCase());
+  if (!d) { ui.ret = null; ui.msg.retour = { type: "error", text: "Puce RFID inconnue : « " + c + " ». Aucune boîte ne correspond." }; renderApp(); return; }
+  if (d.statut !== "Sorti") { ui.ret = null; ui.msg.retour = { type: "error", text: d.nom + " n'est pas signalée comme sortie (statut actuel : " + d.statut + ")." }; renderApp(); return; }
+  ui.ret = d.nom;
+  ui.msg.retour = null;
+  ui.retStatuses = {};
+  data.accessories.filter((a) => a.device === d.nom).forEach((a) => { ui.retStatuses[a.reference] = "ok"; });
+  ui.input["ret-comment"] = "";
+  renderApp();
+}
+
+function updateDepCount() {
+  const b = document.getElementById("dep-count-btn");
+  if (!b) return;
+  const keys = Object.keys(ui.depChecks);
+  const n = keys.filter((k) => ui.depChecks[k]).length;
+  b.textContent = "Tout cocher (" + n + "/" + keys.length + ")";
+}
+
+function doDepartConfirm() {
+  const d = data.devices.find((x) => x.nom === ui.dep);
+  if (!d) return;
+  const accs = data.accessories.filter((a) => a.device === d.nom);
+  const nonCoche = accs.filter((a) => !ui.depChecks[a.reference]);
+  const prisPar = (document.getElementById("dep-pris") || {}).value || "";
+  const sortiLe = (document.getElementById("dep-sorti") || {}).value || "";
+  const retourPrevu = (document.getElementById("dep-retour") || {}).value || "";
+  if (nonCoche.length > 0) {
+    ui.msg.depart = { type: "error", text: "Il reste " + nonCoche.length + " accessoire" + (nonCoche.length > 1 ? "s" : "") + " non coché" + (nonCoche.length > 1 ? "s" : "") + " (" + nonCoche.map((a) => a.accessoire).join(", ") + "). Cochez la présence de chaque accessoire avant de confirmer le départ." };
+    renderApp(); return;
+  }
+  if (!prisPar.trim()) { ui.msg.depart = { type: "error", text: "Indiquez qui prend la boîte." }; renderApp(); return; }
+  if (!retourPrevu || retourPrevu < sortiLe) { ui.msg.depart = { type: "error", text: "La date de retour prévu est invalide (elle doit être postérieure ou égale à la date de départ)." }; renderApp(); return; }
+  handleDepart(d.nom, d.rfid, prisPar.trim(), sortiLe, retourPrevu, accs.length);
+  ui.msg.depart = { type: "ok", text: "Départ enregistré : " + d.nom + " prise par " + prisPar.trim() + ", retour prévu le " + frDate(retourPrevu) + ". Contenu vérifié (" + accs.length + " accessoires). Le matériel est maintenant « Sorti »." };
+  ui.dep = null;
+  renderApp();
+}
+
+function doRetourConfirm() {
+  const d = data.devices.find((x) => x.nom === ui.ret);
+  if (!d) return;
+  const comment = (document.getElementById("ret-comment") || {}).value || "";
+  const res = handleReturn({ deviceNom: d.nom, rfid: d.rfid, user: d.prisPar, statuses: ui.retStatuses, comment: comment });
+  ui.msg.retour = res;
+  ui.ret = null;
+  renderApp();
+}
+
+function doResolve(deviceNom) {
+  const d = data.devices.find((x) => x.nom === deviceNom);
+  if (!d) return;
+  const user = (document.getElementById("res-user") || {}).value || "";
+  const note = (document.getElementById("res-note") || {}).value || "";
+  handleResolve({ deviceNom: deviceNom, rfid: d.rfid, user: user.trim() || d.proprietaire, note: note.trim() });
+  ui.resolveFor = null;
+  ui.input["res-user"] = "";
+  ui.input["res-note"] = "";
+  ui.msg.inventaire = { type: "ok", text: "Problème réglé : " + deviceNom + " et son contenu sont de nouveau « Disponible »." };
+  renderApp();
+}
+
+function doReset() {
+  if (!ui.confirmReset) {
+    ui.confirmReset = true;
+    renderApp();
+    setTimeout(() => { ui.confirmReset = false; renderApp(); }, 4000);
+    return;
+  }
+  data = { devices: clone(DEVICES_BASE), accessories: clone(ACCESS_BASE), history: clone(HISTORY_BASE) };
+  persist();
+  ui.confirmReset = false;
+  ui.msg = {}; ui.dep = null; ui.ret = null; ui.resolveFor = null; ui.input = {};
+  renderApp();
+}
+
+/* ==================== Événements ==================== */
+
+const root = document.getElementById("root");
+
+root.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+  switch (el.dataset.action) {
+    case "tab": ui.tab = el.dataset.tab; renderApp(); break;
+    case "reset": doReset(); break;
+    case "toggle": ui.expanded[el.dataset.nom] = !ui.expanded[el.dataset.nom]; refreshList(); break;
+    case "resolve-open": ui.resolveFor = el.dataset.nom; ui.input["res-user"] = ""; ui.input["res-note"] = ""; refreshList(); break;
+    case "resolve-cancel": ui.resolveFor = null; refreshList(); break;
+    case "resolve-validate": doResolve(el.dataset.nom); break;
+    case "scan-depart": doScanDepart(el.dataset.rfid || ((document.getElementById("dep-scan") || {}).value || "")); break;
+    case "scan-retour": doScanRetour(el.dataset.rfid || ((document.getElementById("ret-scan") || {}).value || "")); break;
+    case "dep-checkall": {
+      document.querySelectorAll("#dep-checklist input[type=checkbox]").forEach((cb) => { cb.checked = true; });
+      Object.keys(ui.depChecks).forEach((k) => { ui.depChecks[k] = true; });
+      updateDepCount();
+      break;
+    }
+    case "dep-confirm": doDepartConfirm(); break;
+    case "dep-cancel": ui.dep = null; ui.msg.depart = null; renderApp(); break;
+    case "ret-state": ui.retStatuses[el.dataset.ref] = el.dataset.val; renderApp(); break;
+    case "ret-confirm": doRetourConfirm(); break;
+    case "ret-cancel": ui.ret = null; ui.msg.retour = null; renderApp(); break;
+    case "export-dev": exportDevices(); renderApp(); break;
+    case "export-acc": exportAccessoires(); renderApp(); break;
+    case "export-xls": exportWorkbook(); renderApp(); break;
+    case "csv-close": ui.csvOut = null; renderApp(); break;
+  }
+});
+
+root.addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.id === "inv-search") { ui.search = t.value; refreshList(); return; }
+  const cache = ["dep-scan", "ret-scan", "dep-pris", "dep-sorti", "dep-retour", "ret-comment", "res-user", "res-note"];
+  if (cache.indexOf(t.id) !== -1) ui.input[t.id] = t.value;
+});
+
+root.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.id === "inv-statut") { ui.statut = t.value; refreshList(); }
+  if (t.id === "inv-them") { ui.them = t.value; refreshList(); }
+  if (t.dataset && t.dataset.action === "dep-check") { ui.depChecks[t.dataset.ref] = t.checked; updateDepCount(); }
+});
+
+root.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  if (e.target.id === "dep-scan") { e.preventDefault(); doScanDepart(e.target.value); }
+  if (e.target.id === "ret-scan") { e.preventDefault(); doScanRetour(e.target.value); }
+});
+
+renderApp();
+
+})();
+</script>
+</body>
+</html>
